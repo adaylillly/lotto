@@ -116,17 +116,22 @@
     padding: 16px 24px;
     background: var(--butter);
   }
-  .sub { font-size: 18px; padding: 10px 22px; background: #fff; white-space: nowrap; }
+  .buttons { align-items: center; }
+  .sub { flex: 1 1 0; min-width: 0; height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1; font-size: clamp(14px, 1.35vw, 18px); padding: 0 6px; background: #fff; white-space: nowrap; overflow: hidden; }
   #resetBtn.armed { background: var(--pink); }
+  #viewBtn[aria-pressed="true"] { background: var(--butter); }
+  .icon { flex: none; margin-left: auto; width: 50px; height: 50px; padding: 0; background: #fff; display: grid; place-items: center; }
+  .icon svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .icon[hidden], .history[hidden] { display: none; }
   .range {
-    display: flex; align-items: center; gap: 8px;
+    gap: 6px;
     font-family: var(--font-display);
     border: 4px solid var(--ink); border-radius: 999px;
     box-shadow: 0 6px 0 var(--ink);
     cursor: text;
   }
   .range input {
-    width: 3.6em; min-width: 0; flex: 1 1 auto;
+    width: 3em; min-width: 0; flex: 0 1 auto;
     font: inherit; color: var(--pink-deep); text-align: center;
     border: 0; border-bottom: 2px dashed var(--pink); background: transparent; padding: 0;
   }
@@ -165,6 +170,16 @@
     line-height: 1;
   }
   .slot.latest .chip { box-shadow: 0 0 0 4px var(--butter); }
+  /* 제외할 번호: 나온 순서와 같은 자리, 같은 칸 크기 */
+  .ex button {
+    container-type: inline-size; aspect-ratio: 1; min-width: 0; padding: 0;
+    border: 2px solid var(--ink); border-radius: 50%; box-shadow: none; background: #fff;
+    font-family: var(--font-display); font-size: clamp(11px, 1.25vw, 17px); line-height: 1;
+    display: grid; place-items: center;
+  }
+  .ex button:active:not(:disabled) { transform: scale(.9); box-shadow: none; }
+  .ex button.off { background: var(--ink); color: #fff; text-decoration: line-through; text-decoration-color: var(--pink); text-decoration-thickness: 2px; }
+  .ex button:disabled { opacity: .3; border-style: dashed; }
   .hint { margin: 0; font-size: 15px; color: var(--ink-soft); }
 
   /* 세로로 세운 좁은 화면만 한 줄로 쌓는다. 가로로 눕힌 폰은 PC처럼 좌우로 나눈다. */
@@ -180,9 +195,12 @@
     .now-num { font-size: 52px; }
     .buttons { gap: 10px; }
     #drawBtn { font-size: 26px; padding: 10px 16px; }
-    .sub { flex: 1 1 0; font-size: 15px; padding: 8px 10px; }
     .history-head h2 { font-size: 18px; }
     #count { font-size: 15px; }
+    .sub { font-size: 14px; padding: 0 4px; height: 38px; }
+    .icon { flex: none; width: 38px; height: 38px; padding: 0; }
+    .icon svg { width: 18px; height: 18px; }
+    .ex button { font-size: 12px; }
     .history { grid-template-columns: repeat(var(--cols3, 10), minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
     .chip { border-width: 2px; }
     .hint { display: none; }
@@ -200,9 +218,12 @@
     .buttons { gap: 8px; }
     button { border-width: 3px; box-shadow: 0 4px 0 var(--ink); }
     #drawBtn { font-size: 22px; padding: 8px 16px; }
-    .sub { flex: 1 1 0; font-size: 14px; padding: 6px 10px; }
     .history-head h2 { font-size: 16px; }
     #count { font-size: 14px; }
+    .sub { font-size: 13px; padding: 0 4px; height: 32px; }
+    .icon { flex: none; width: 32px; height: 32px; padding: 0; }
+    .icon svg { width: 16px; height: 16px; }
+    .ex button { font-size: 11px; border-width: 2px; box-shadow: none; }
     .history { grid-template-columns: repeat(var(--cols2, 15), minmax(0, 1fr)); gap: 5px; margin-top: 4px; }
     .range { border-width: 3px; box-shadow: 0 4px 0 var(--ink); gap: 6px; }
     .chip { border-width: 2px; }
@@ -229,17 +250,19 @@
 
     <div class="buttons">
       <button id="drawBtn" type="button">공 뽑기</button>
-      <button id="resetBtn" class="sub" type="button">처음부터 다시</button>
-      <button id="fullBtn" class="sub" type="button">전체 화면</button>
+      <button id="resetBtn" class="sub" type="button">처음부터</button>
       <label class="sub range" for="rangeInput">번호 <input id="rangeInput" type="text" inputmode="text" autocomplete="off" value="1-30" aria-label="번호 범위"></label>
+      <button id="viewBtn" class="sub" type="button" aria-pressed="false">제외번호</button>
+      <button id="fullBtn" class="icon" type="button" aria-label="전체 화면" title="전체 화면"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="fullIcon" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
     </div>
 
     <div>
       <div class="history-head">
-        <h2>나온 순서</h2>
+        <h2 id="viewTitle">나온 순서</h2>
         <span id="count">0 / 30</span>
       </div>
       <div class="history" id="history"></div>
+      <div class="history ex" id="exGrid" hidden></div>
     </div>
 
     <p class="hint">스페이스바를 눌러도 공이 나와요. 한 번 나온 번호는 다시 나오지 않아요.</p>
@@ -273,6 +296,11 @@
   const nowNum = document.getElementById('nowNum');
   const countEl = document.getElementById('count');
   const historyEl = document.getElementById('history');
+  const exGrid = document.getElementById('exGrid');
+  const viewBtn = document.getElementById('viewBtn');
+  const viewTitle = document.getElementById('viewTitle');
+  const userEx = new Set();   // 화면에서 고른 제외 번호. "처음부터 다시"나 새로 접속하면 비워진다.
+  let view = 'history';       // 'history' = 나온 순서, 'ex' = 제외할 번호 (같은 자리를 번갈아 쓴다)
 
   let balls = [];        // 유리구 안에 남은 공
   let drawn = [];        // 나온 번호 (순서대로)
@@ -357,8 +385,36 @@
       slot.className = 'slot';
       historyEl.appendChild(slot);
     }
-    countEl.textContent = '0 / ' + TOTAL;
+    userEx.clear();
+    exGrid.textContent = '';
+    for (const k of ['--cols3', '--cols2']) exGrid.style.setProperty(k, historyEl.style.getPropertyValue(k));
+    for (let n = LO; n <= HI; n++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = n; b.dataset.n = n; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', n + '번 제외');
+      exGrid.appendChild(b);
+    }
+    setView('history');
   }
+  function showCount() { countEl.textContent = view === 'ex' ? '제외 ' + userEx.size + '개' : drawn.length + ' / ' + TOTAL; }
+  function setView(v) {
+    view = v;
+    const ex = v === 'ex';
+    historyEl.hidden = ex; exGrid.hidden = !ex;
+    viewTitle.textContent = ex ? '제외번호' : '나온 순서';
+    viewBtn.textContent = ex ? '나온 순서' : '제외번호';
+    viewBtn.setAttribute('aria-pressed', String(ex));
+    showCount();
+  }
+  viewBtn.addEventListener('click', () => setView(view === 'ex' ? 'history' : 'ex'));
+  exGrid.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled || state !== 'idle') return;      // 공이 돌고 있을 때는 바꾸지 않는다
+    const n = Number(b.dataset.n), off = !userEx.has(n);
+    if (off) userEx.add(n); else userEx.delete(n);
+    b.classList.toggle('off', off); b.setAttribute('aria-pressed', String(off));
+    showCount(); updateButtons();
+  });
+  const pool = () => balls.filter(b => !userEx.has(b.n));   // 제외 번호를 뺀 후보
 
   function fillSlot(slot, n) {
     slot.classList.add('filled', 'latest');
@@ -373,15 +429,16 @@
   }
 
   function updateButtons() {
-    const done = balls.length === 0;                        // 뽑을 수 있는 공이 더 없다
+    const done = pool().length === 0;                       // 뽑을 수 있는 공이 더 없다
     drawBtn.disabled = state !== 'idle' || done;
     drawBtn.textContent = done ? '모두 뽑았어요!' : '공 뽑기';
   }
 
   /* ---------- 뽑기 ---------- */
   function startDraw() {
-    if (state !== 'idle' || balls.length === 0) return;
-    target = balls[Math.floor(Math.random() * balls.length)];
+    const cand = pool();
+    if (state !== 'idle' || cand.length === 0) return;
+    target = cand[Math.floor(Math.random() * cand.length)];
     state = 'mix'; stateT = performance.now();
     phys = 'chaos'; gustTick = 0; gustNext = 8;
     for (const b of balls) { b.vz = (Math.random() - .5) * 6; b.hold = 0; b.shot = 0; }
@@ -396,7 +453,8 @@
     const slots = historyEl.children;
     if (drawn.length > 1) slots[drawn.length - 2].classList.remove('latest');
     fillSlot(slots[drawn.length - 1], n);
-    countEl.textContent = drawn.length + ' / ' + TOTAL;
+    const eb = exGrid.children[n - LO]; if (eb) eb.disabled = true;   // 이미 나온 번호는 제외 칸에서 누를 수 없다
+    showCount();
   }
 
   /* ---------- 물리 ----------
@@ -770,12 +828,12 @@
   function disarm() {
     clearTimeout(armTimer); armTimer = null;
     resetBtn.classList.remove('armed');
-    resetBtn.textContent = '처음부터 다시';
+    resetBtn.textContent = '처음부터';
   }
   resetBtn.addEventListener('click', () => {
     if (!armTimer) {                                      // 실수로 지우지 않도록 두 번 눌러야 한다
       resetBtn.classList.add('armed');
-      resetBtn.textContent = '한 번 더 누르기';
+      resetBtn.textContent = '한 번 더';
       armTimer = setTimeout(disarm, 3000);
       return;
     }
@@ -828,7 +886,12 @@
         if (r && r.catch) r.catch(() => {});
       } catch (e) {}
     });
-    const sync = () => { fullBtn.textContent = fsNow() ? '전체 화면 끝내기' : '전체 화면'; setTimeout(fitCanvas, 60); };
+    const sync = () => {
+      const on = !!fsNow(), label = on ? '전체 화면 끝내기' : '전체 화면';
+      document.getElementById('fullIcon').setAttribute('d', on ? 'M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5' : 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5');
+      fullBtn.setAttribute('aria-label', label); fullBtn.title = label;
+      setTimeout(fitCanvas, 60);
+    };
     document.addEventListener('fullscreenchange', sync);
     document.addEventListener('webkitfullscreenchange', sync);
   }
