@@ -278,6 +278,20 @@
 
 <script>
 (() => {
+  // ★ 번호 지정: 아래 대괄호 안에 번호를 쉼표로 적으면 그 번호들이 먼저 나옵니다. 적은 순서와 상관없이, 그 안에서 무작위로 나옵니다.
+  //   예) const ORDER = [7, 21, 3];  → 7, 21, 3이 무작위 순서로 먼저 다 나온 뒤 나머지가 무작위
+  //   비워 두면( [] ) 전부 무작위입니다.
+  //   "처음부터 다시"를 누른 뒤에는 이 지정을 무시하고 전부 무작위로 나옵니다.
+  //   (페이지를 새로 열거나 새로고침하면 다시 적용됩니다.)
+  const ORDER = [3, 6, 12, 14, 30, 25, 21];
+
+  // ★ 제외 번호: 아래 대괄호 안에 적은 번호는 절대 나오지 않습니다.
+  //   예) const EXCLUDE = [4, 13];  → 4번, 13번 공은 유리구 안에서 같이 섞이지만 뽑히지는 않습니다.
+  //   비워 두면( [] ) 모든 번호가 나옵니다. "처음부터 다시"를 눌러도 계속 적용됩니다.
+  //   ORDER와 EXCLUDE에 같은 번호가 있으면 제외가 우선입니다.
+  const EXCLUDE = [];
+  const EXCLUDED = new Set(EXCLUDE.map(Number));
+
   const MAX_BALLS = 40;                             // 유리구에 들어가는 최대 개수
   let LO = 1, HI = 30, TOTAL = 30;                  // 번호 범위(화면의 '번호' 칸에서 바꾼다)
   const W = 560, H = 676;
@@ -319,6 +333,7 @@
   let mover = null;      // 유리구를 빠져나와 관을 지나는 공
   let cupBall = null;    // 받침에 놓인 공 번호
   let gustTick = 0, gustNext = 30;
+  let useOrder = true;   // "처음부터 다시"를 누르면 false
 
   /* ---------- 스프링처럼 감긴 유리관 ---------- */
   // 옆에서 살짝 내려다본 나선: 앞쪽 가닥(front)과 뒤쪽 가닥을 따로 그린다
@@ -421,7 +436,7 @@
     b.classList.toggle('off', off); b.setAttribute('aria-pressed', String(off));
     showCount(); updateButtons();
   });
-  const pool = () => balls.filter(b => !userEx.has(b.n));   // 제외 번호를 뺀 후보
+  const pool = () => balls.filter(b => !EXCLUDED.has(b.n) && !userEx.has(b.n));   // 제외 번호를 뺀 후보
 
   function fillSlot(slot, n) {
     slot.classList.add('filled', 'latest');
@@ -445,7 +460,13 @@
   function startDraw() {
     const cand = pool();
     if (state !== 'idle' || cand.length === 0) return;
-    target = cand[Math.floor(Math.random() * cand.length)];
+    let pick = null;
+    if (useOrder) {                                           // 지정한 번호가 남아 있으면 그 안에서 무작위로 먼저
+      const wanted = new Set(ORDER.map(Number)), left = cand.filter(b => wanted.has(b.n));
+      if (left.length) pick = left[Math.floor(Math.random() * left.length)];
+    }
+    target = pick || cand[Math.floor(Math.random() * cand.length)];
+    cupBall = null; sparks = [];                             // 새 추첨을 시작하면 앞서 나온 공은 받침에서 치운다
     state = 'mix'; stateT = performance.now();
     phys = 'chaos'; gustTick = 0; gustNext = 8;
     for (const b of balls) { b.vz = (Math.random() - .5) * 6; b.hold = 0; b.shot = 0; }
@@ -898,6 +919,7 @@
       return;
     }
     disarm();
+    useOrder = false;                                     // 이후로는 지정 번호를 쓰지 않는다
     resetAll();
   });
 
